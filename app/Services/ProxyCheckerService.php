@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Http;
+
 class ProxyCheckerService
 {
 
@@ -35,9 +37,13 @@ class ProxyCheckerService
             $result = $this->pingProxyAsSocks5($ipAddress, $port, $result);
         }
 
+        //$realIp = $this->fetchRealIpAddress($result['type'], $ipAddress, (int) $port);
+        //dd($realIp);
+
         $result['country']     = $this->fetchInfoAboutIp($ipAddress)['country'];
         $result['city']        = $this->fetchInfoAboutIp($ipAddress)['city'];
         $result['countryCode'] = $this->fetchInfoAboutIp($ipAddress)['countryCode'];
+        // $result['realIp']      = $realIp;
 
         return $result;
     }
@@ -55,6 +61,7 @@ class ProxyCheckerService
         curl_setopt($chSocks, CURLOPT_URL, $socksUrl);
         curl_setopt($chSocks, CURLOPT_PROXY, $ipAddress);
         curl_setopt($chSocks, CURLOPT_PROXYPORT, $port);
+        curl_setopt($chSocks, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
         curl_setopt($chSocks, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($chSocks, CURLOPT_TIMEOUT, 10);
         curl_exec($chSocks);
@@ -102,5 +109,10 @@ class ProxyCheckerService
         $result['ttl'] = $loadingTime;
 
         return $result;
+    }
+
+    private function fetchRealIpAddress(string $scheme, string $ipAddress, int $port)
+    {
+        // todo: extract field query from ip-api.com with proxy
     }
 }
