@@ -19,16 +19,12 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 
 
-import Echo from 'laravel-echo';
+import Echo   from 'laravel-echo';
 
 window.Echo = new Echo({
-    broadcaster: 'socket.io',
-    host       : window.location.hostname + ':6001',
+    broadcaster : 'socket.io',
 });
 
-window.Echo.channel('foo')
-    .listen('.test', async (e) => {
-        await console.log(e);
-    });
 
-console.log(window.Echo);
+console.log(window.Echo)
+

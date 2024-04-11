@@ -23,8 +23,8 @@ class CheckProxyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'proxies.*' => ['required', 'array'],
-            'proxies.*.*' => ['required', new ProxyIpAddressRule()],
+            'proxies' => ['required', 'array'],
+            'proxies.*' => ['required', new ProxyIpAddressRule()],
         ];
     }
 }

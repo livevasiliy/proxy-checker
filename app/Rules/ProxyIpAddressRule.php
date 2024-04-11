@@ -5,6 +5,7 @@ namespace App\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Validator;
 
 class ProxyIpAddressRule implements ValidationRule, ValidatorAwareRule
@@ -18,12 +19,10 @@ class ProxyIpAddressRule implements ValidationRule, ValidatorAwareRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        [$ipAddress, $port] = explode(':', $value);
-        if (!$this->validator->validateIp('ipAddress', $ipAddress)) {
-            $fail('Invalid IP address.');
-        } elseif (!is_numeric($port)) {
-            $fail('Invalid port.');
+        if (!Str::contains($value, ':')) {
+            $fail('The :attribute must be a valid IP address.');
         }
+
     }
 
     public function setValidator(Validator $validator): static

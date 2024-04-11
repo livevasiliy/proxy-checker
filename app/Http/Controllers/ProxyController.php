@@ -10,8 +10,8 @@ class ProxyController extends Controller
 {
     public function check(CheckProxyRequest $request, ProxyCheckerService $proxyCheckerService): JsonResponse
     {
-        $result = $proxyCheckerService->check($request->validated('proxies'));
+        $proxyCheckerService->check($request->validated('proxies'));
 
-        return new JsonResponse(['result' => $result]);
+        return new JsonResponse(['message' => 'Proxies are being processed!'], JsonResponse::HTTP_OK);
     }
 }

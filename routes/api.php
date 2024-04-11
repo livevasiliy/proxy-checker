@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use App\Events\MyEvent;
 use App\Http\Controllers\ProxyController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,4 +16,8 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('v1')->group(function () {
    Route::post('proxy/check', [ProxyController::class, 'check']);
+});
+
+Route::get('test', function () {
+    event(new MyEvent('hello world'));
 });
