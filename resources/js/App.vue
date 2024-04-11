@@ -1,35 +1,74 @@
-<script>
-    import Pusher from "pusher-js"
-
-    export default {
-        name: 'App',
-        data () {
-            return {
-                messages: [],
-            };
-        },
-        mounted () {
-            Pusher.logToConsole = true;
-            const pusher = new Pusher("f5844939109a02a656aa", {
-                appId: "1785844",
-                secret: "3bf8b9beff8a1053c777",
-                cluster: 'en',
-                useTLS: false,
-            });
-            let channel   = pusher.subscribe('my-channel');
-            channel.bind('my-event', function(data) {
-                alert(JSON.stringify(data));
-            });
-        },
-    };
-</script>
-
 <template>
-    <ul>
-        <li v-for="message in messages">{{ message }}</li>
-    </ul>
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <div>
+                    <label for="proxies">Укажите IP адрес(а)</label>
+                    <textarea name="proxies"
+                              id="proxies"
+                              cols="30"
+                              rows="10"
+                              class="form-control"
+                              v-model="proxies"
+                              placeholder="Укажите IP адрес"
+                    ></textarea>
+                    <button class="btn btn-secondary"
+                            @click="sendProxies">Проверить
+                    </button>
+                </div>
+            </div>
+            <div class="col-9"
+                 v-if="!loading && handledProxies.length > 0">
+                <h2>Результат обработки</h2>
+                <Result :proxies="handledProxies" />
+            </div>
+
+        </div>
+    </div>
 </template>
+<script>
+import { chunk } from './helpers.js';
+import Result    from '@/components/Result.vue';
+import Pusher    from 'pusher-js';
 
+export default {
+    components: { Result },
+    data () {
+        return {
+            proxies       : null,
+            loading       : false,
+            handledProxies: [],
+        };
+    },
+    methods: {
+        sendProxies () {
+            const CHUNK_SIZE = 100;
+            const proxies    = this.proxies.split('\n');
+            let chunks       = chunk(proxies, CHUNK_SIZE);
+            this.loading     = true;
+            axios.post('/api/v1/proxy/check', {
+                    proxies: chunks,
+                },
+            ).then((response) => {
+                this.loading        = false;
+                this.handledProxies = [...response.data.result];
+            }).catch((error) => {
+                this.loading = false;
+                console.log(error);
+                let channel = pusher.subscribe('my-channel');
+                channel.bind('my-event', function (data) {
+                    alert(JSON.stringify(data));
+                });
+            });
+        },
+    },
+    mounted () {
+        window.Echo.channel('proxy-check')
+            .listen('.proxy-is-checked', (channel) => {
+                console.log(channel);
+            });
+    },
+};
+</script>
 <style scoped>
-
 </style>
