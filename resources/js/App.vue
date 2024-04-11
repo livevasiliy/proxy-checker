@@ -52,8 +52,13 @@ export default {
 
         window.Echo = this.echo;
 
+        this.echo.channel('my-channel').listen('.my-event', (data) => {
+            console.log(data);
+        });
+
         this.echo.channel('proxy-check')
             .listen('.proxy-is-checked', (event) => {
+                console.log(event);
                 // Обрабатываем результаты проверки
                 this.handledProxies.push(event.proxy);
                 this.progress = Math.round((this.handledProxies.length / this.totalProxies) * 100);
