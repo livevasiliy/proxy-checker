@@ -27,9 +27,9 @@
     </div>
 </template>
 <script>
+import Result from './components/Result.vue';
+import Echo from 'laravel-echo';
 import { chunk } from './helpers.js';
-import Result    from '@/components/Result.vue';
-import Pusher    from 'pusher-js';
 
 export default {
     components: { Result },
@@ -38,35 +38,55 @@ export default {
             proxies       : null,
             loading       : false,
             handledProxies: [],
+            progress      : 0,
+            finished      : false,
+            message       : '',
+            echo          : null
         };
+    },
+    mounted () {
+        this.echo = new Echo({
+            broadcaster: 'socket.io',
+            host: window.location.hostname + ':6001' // Подставьте сюда адрес вашего сервера WebSockets
+        });
+
+        window.Echo = this.echo;
+
+        this.echo.channel('proxy-check')
+            .listen('.proxy-is-checked', (event) => {
+                // Обрабатываем результаты проверки
+                this.handledProxies.push(event.proxy);
+                this.progress = Math.round((this.handledProxies.length / this.totalProxies) * 100);
+
+                if (this.progress >= 100) {
+                    this.loading = false;
+                    this.finished = true;
+                }
+            });
     },
     methods: {
         sendProxies () {
             const CHUNK_SIZE = 100;
-            const proxies    = this.proxies.split('\n');
-            let chunks       = chunk(proxies, CHUNK_SIZE);
-            this.loading     = true;
-            axios.post('/api/v1/proxy/check', {
-                    proxies: chunks,
-                },
-            ).then((response) => {
-                this.loading        = false;
-                this.handledProxies = [...response.data.result];
-            }).catch((error) => {
-                this.loading = false;
-                console.log(error);
-                let channel = pusher.subscribe('my-channel');
-                channel.bind('my-event', function (data) {
-                    alert(JSON.stringify(data));
+
+            const proxies = this.proxies.split('\n');
+            let chunks    = chunk(proxies, CHUNK_SIZE);
+            this.totalProxies = proxies.length;
+
+            this.loading   = true;
+            this.progress  = 0;
+            this.finished  = false;
+
+            chunks.forEach(chunk => {
+                axios.post('/api/v1/proxy/check', {
+                        proxies: chunk,
+                    },
+                ).then((response) => {
+                    // Обработка успешного ответа
+                }).catch((error) => {
+                    // Обработка ошибки
                 });
             });
         },
-    },
-    mounted () {
-        window.Echo.channel('proxy-check')
-            .listen('.proxy-is-checked', (channel) => {
-                console.log(channel);
-            });
     },
 };
 </script>
